@@ -1,6 +1,8 @@
 # MachineLearning_termProject
 Machine Learning term project
 
+# Auto Clustering
+
 ############<br>
 AutoML (X, y = None, scale_col, encode_col, scalers = None, encoders = None,
          feature_param = None, models = None, model_param = None,
