@@ -36,6 +36,7 @@ from scipy.stats import stats
 
 df = pd.read_csv('online_shoppers_intention.csv')
 
+print(list(df.columns.values))
 feature_label = ['Administrative', 'Administrative_Duration', 'Informational',
                  'Informational_Duration', 'ProductRelated', 'ProductRelated_Duration',
                  'BounceRates', 'ExitRate', 'PageValue', 'SpecialDay', 'Browser', 'Region',
@@ -45,7 +46,7 @@ target_label = ['Revenue']
 scale_col = ['Administrative', 'Administrative_Duration', 'Informational', 'Informational_Duration',
              'ProductRelated', 'ProductRelated_Duration', 'BounceRates',
              'ExitRates', 'PageValues', 'SpecialDay']
-encode_col = ['Browser', 'Region', 'TrafficType', 'VisitorType','Weekend', 'OperatingSystems', 'Month', 'Revenue']
+encode_col = ['Browser', 'Region', 'TrafficType', 'VisitorType','Weekend', 'OperatingSystems', 'Month']
 
 
 # Print dataset's information
@@ -65,8 +66,8 @@ encode_col = ['Browser', 'Region', 'TrafficType', 'VisitorType','Weekend', 'Oper
 # Fill null value - Using ffill
 df = df.fillna(method='ffill')
 # Check null value (Cleaned Data)
-# print("\n***** Check null (Cleaned Data) *****")
-# print(df.isna().sum())
+print("\n***** Check null (Cleaned Data) *****")
+print(df.isna().sum())
 
 # Remove Outliers with z-score
 # Description = Use the z-score to handle outlier over mean +- 3SD
@@ -111,10 +112,11 @@ def overall_average_score(actual, prediction):
     total_score = (matthews_corrcoef(actual, prediction) +
                    accuracy_score(actual, prediction) + precision + recall + f1_score)
     return total_score / 5
-
+df.columns = df.columns.to_series().apply(lambda x: x.strip())
 # Set X, y data
 y_data = df.loc[:, target_label]
 X_data = df.drop(target_label, axis=1)
+
 def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                       models=None, model_param=None, cv=None, n_jobs=None):
 
@@ -130,22 +132,29 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
     # Set Model
     if models is None:
-        model = [LogisticRegression(),
-                 SVC(),
+        model = [
+        # LogisticRegression(),
+        #        SVC(),
                  GradientBoostingClassifier()]
     else: model = models
 
     # Set Hyperparameter
     if model_param is None:
                     # LogisticRegression()
-        parameter = [{'penalty':['l1','l2'], 'random_state':[1, 2, 5, 10, 20], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
-                      'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
-                     # SVC()
-                     {'random_state': [1, 2, 5, 10, 20], 'kernel': ['linear', 'rbf', 'sigmoid'],
-                      'C': [0.01, 0.1, 1.0, 10.0, 100.0], 'gamma': ['scale', 'auto']},
+        parameter = [
+                    # {'penalty':['none','l2'], 'random_state':[1, 2, 5, 10, 20], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
+                    #   'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
+                    #  # SVC()
+                    #  {'random_state': [1, 2, 5, 10, 20], 'kernel': ['linear', 'rbf', 'sigmoid'],
+                    #   'C': [0.01, 0.1, 1.0, 10.0, 100.0], 'gamma': ['scale', 'auto']},
                     # GradientBoostingClassifier()
-                     {'loss':['deviance','exponential'], 'penalty':['l2'], 'learning_state':[0.001, 0.1, 1],
-                      'n_estimator':[1, 10,100,1000], 'subsample':["0.0001","0.001", "0.1"], 'min_samples_split':[10,50, 100, 300], 'min_samples_leaf':[5, 10, 15, 50]}]
+                     {'loss':['deviance','exponential'],
+                      'learning_rate':[0.001, 0.1, 1],
+                      'n_estimators':[1, 10,100,1000],
+                      'subsample':[0.0001,0.001, 0.1],
+                      'min_samples_split':[10,50, 100, 300],
+                      'min_samples_leaf':[5, 10, 15,50]}
+                     ]
 
     else: parameter = model_param
 
@@ -165,8 +174,8 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
     # SMOTE - Synthetic minority oversampling technique (Fixing the imbalanced data)
     target = y
-    smote = SMOTE(random_state=len(X))
-    X, y = smote.fit_resample(X, y)
+    # smote = SMOTE(random_state=len(X))
+    # X, y = smote.fit_resample(X, y)
 
     ####################################################################
     # Iterate
@@ -177,28 +186,36 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
             df_scaled.columns = scale_col
             # Encoding
             if encode_col is not None:
+
                 if type(j) == type(OrdinalEncoder()):
                     df_encoded = j.fit_transform(X[encode_col])
                     df_encoded = pd.DataFrame(df_encoded)
                     df_encoded.columns = encode_col
                     df_prepro = pd.concat([df_scaled, df_encoded], axis = 1)
+                    #y=pd.DataFrame(j.fit_transform(y)) # todo
                 else:
                     print("No")
                     dum = pd.DataFrame(pd.get_dummies(X[encode_col]))
                     df_prepro = pd.concat([df_scaled, dum], axis=1)
-
+                    #y=pd.DataFrame(pd.get_dummies(y)) # todo
             else:
-                df_prepro = df_scaled
+                df_prepro = df_scaled(pd.get_dummies(y))
 
+            print(df_prepro.isna().sum())
+            print(y.isna().sum())
+            # smote = SMOTE(random_state=len(df_prepro))
+            # df_prepro, y = smote.fit_resample(df_prepro, y)
 
-
+            print(df_prepro.shape)
+            print(y.shape)
             # Feature Selection Using the Select KBest (K = 6)
             selectK = SelectKBest(score_func=f_regression, k=6).fit(df_prepro, y.values.ravel())
             cols = selectK.get_support(indices=True)
             df_selected = df_prepro.iloc[:, cols]
 
             for z in model:
-
+                print("model: ",z)
+                print(z.get_params().keys())
                 # Split train, testset
                 X_train, X_test, y_train, y_test = train_test_split(df_selected, y)
 
@@ -220,12 +237,12 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                 grid_scorer = make_scorer(overall_average_score, greater_is_better=True)
 
                 # Modeling(Using the RandomSearchCV)
-                random_search = RandomizedSearchCV(estimator=z, param_grid=param, n_jobs=N_JOBS, scoring = grid_scorer, cv=setCV)
+                random_search = RandomizedSearchCV(estimator=z, param_distributions=param, n_jobs=N_JOBS, scoring = grid_scorer, cv=setCV)
                 result = random_search.fit(X_train, y_train.values.ravel())
                 score = random_search.score(X_test, y_test)
                 best_model = result.best_estimator_
                 best_params = result.best_params_
-                pred = best_model.fit_predict(df_selected)
+                pred = best_model.predict(df_selected)
 
 
                 # Find Best Score
