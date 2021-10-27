@@ -106,12 +106,12 @@ df = df[df['VisitorType'] != 'Other']
 # print(df.info())
 
 #Scoring function
-def overall_average_score(actual, prediction):
-    precision, recall, f1_score, support = precision_recall_fscore_support(
-        actual, prediction)
-    total_score = (matthews_corrcoef(actual, prediction) +
-                   accuracy_score(actual, prediction) + precision + recall + f1_score)
-    return total_score / 5
+def overall_average_score(actual,prediction):
+    precision = precision_recall_fscore_support(actual, prediction, average = 'binary')[0]
+    recall = precision_recall_fscore_support(actual, prediction, average = 'binary')[1]
+    f1_score = precision_recall_fscore_support(actual, prediction, average = 'binary')[2]
+    total_score = matthews_corrcoef(actual, prediction)+accuracy_score(actual, prediction)+precision+recall+f1_score
+    return total_score/5
 df.columns = df.columns.to_series().apply(lambda x: x.strip())
 # Set X, y data
 y_data = df.loc[:, target_label]
@@ -264,4 +264,3 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 # Auto Find Best Accuracy
 print("Auto Find Best Accuracy")
 FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,models=None, model_param=None )
-
