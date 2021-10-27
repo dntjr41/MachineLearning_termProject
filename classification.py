@@ -107,9 +107,7 @@ df = df[df['VisitorType'] != 'Other']
 
 #Scoring function
 def overall_average_score(actual,prediction):
-    precision = precision_recall_fscore_support(actual, prediction, average = 'binary')[0]
-    recall = precision_recall_fscore_support(actual, prediction, average = 'binary')[1]
-    f1_score = precision_recall_fscore_support(actual, prediction, average = 'binary')[2]
+    precision, recall, f1_score, _ = precision_recall_fscore_support(actual, prediction, average='binary')
     total_score = matthews_corrcoef(actual, prediction)+accuracy_score(actual, prediction)+precision+recall+f1_score
     return total_score/5
 df.columns = df.columns.to_series().apply(lambda x: x.strip())
@@ -133,20 +131,22 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     # Set Model
     if models is None:
         model = [
-        # LogisticRegression(),
-        #        SVC(),
-                 GradientBoostingClassifier()]
+            LogisticRegression(),
+            SVC(),
+            GradientBoostingClassifier()
+        ]
     else: model = models
 
     # Set Hyperparameter
     if model_param is None:
-                    # LogisticRegression()
+                    
         parameter = [
-                    # {'penalty':['none','l2'], 'random_state':[1, 2, 5, 10, 20], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
-                    #   'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
-                    #  # SVC()
-                    #  {'random_state': [1, 2, 5, 10, 20], 'kernel': ['linear', 'rbf', 'sigmoid'],
-                    #   'C': [0.01, 0.1, 1.0, 10.0, 100.0], 'gamma': ['scale', 'auto']},
+                      # LogisticRegression()
+                     {'penalty':['l1','l2'], 'random_state':[0,1], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
+                       'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
+                      # SVC()
+                     {'random_state': [0,1], 'kernel': ['linear', 'rbf', 'sigmoid'],
+                       'C': [0.01, 0.1, 1.0, 10.0, 100.0], 'gamma': ['scale', 'auto']},
                     # GradientBoostingClassifier()
                      {'loss':['deviance','exponential'],
                       'learning_rate':[0.001, 0.1, 1],
@@ -186,32 +186,32 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
             df_scaled.columns = scale_col
             # Encoding
             if encode_col is not None:
-
                 if type(j) == type(OrdinalEncoder()):
-                    df_encoded = j.fit_transform(X[encode_col])
-                    df_encoded = pd.DataFrame(df_encoded)
+                    df_encoded = pd.DataFrame(j.fit_transform(X[encode_col]))
                     df_encoded.columns = encode_col
-                    df_prepro = pd.concat([df_scaled, df_encoded], axis = 1)
+                    df_encoded.index = df_scaled.index
+                    df_prepro = pd.concat([df_scaled, df_encoded], axis=1)
+
                     #y=pd.DataFrame(j.fit_transform(y)) # todo
                 else:
                     print("No")
                     dum = pd.DataFrame(pd.get_dummies(X[encode_col]))
+                    dum.index = df_scaled.index
                     df_prepro = pd.concat([df_scaled, dum], axis=1)
+
                     #y=pd.DataFrame(pd.get_dummies(y)) # todo
             else:
-                df_prepro = df_scaled(pd.get_dummies(y))
+                df_prepro = df_scaled[pd.get_dummies(y)]
+            df_prepro = pd.DataFrame(df_prepro)
+            #smote = SMOTE(random_state=len(df_prepro))
+            #df_prepro, y = smote.fit_resample(df_prepro, y)
 
-            print(df_prepro.isna().sum())
-            print(y.isna().sum())
-            # smote = SMOTE(random_state=len(df_prepro))
-            # df_prepro, y = smote.fit_resample(df_prepro, y)
 
-            print(df_prepro.shape)
-            print(y.shape)
             # Feature Selection Using the Select KBest (K = 6)
             selectK = SelectKBest(score_func=f_regression, k=6).fit(df_prepro, y.values.ravel())
             cols = selectK.get_support(indices=True)
             df_selected = df_prepro.iloc[:, cols]
+            df_selected = df_selected.fillna(method='ffill')
 
             for z in model:
                 print("model: ",z)
@@ -234,15 +234,12 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
 
 
-                grid_scorer = make_scorer(overall_average_score, greater_is_better=True)
+                #grid_scorer = make_scorer(overall_average_score, greater_is_better=True)
 
                 # Modeling(Using the RandomSearchCV)
-                random_search = RandomizedSearchCV(estimator=z, param_distributions=param, n_jobs=N_JOBS, scoring = grid_scorer, cv=setCV)
-                result = random_search.fit(X_train, y_train.values.ravel())
+                random_search = RandomizedSearchCV(estimator=z, param_distributions=param, n_jobs=N_JOBS,  cv=setCV)
+                random_search.fit(X_train, y_train.values.ravel())
                 score = random_search.score(X_test, y_test)
-                best_model = result.best_estimator_
-                best_params = result.best_params_
-                pred = best_model.predict(df_selected)
 
 
                 # Find Best Score
@@ -253,14 +250,24 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                     best_combination['model'] = z
                     best_combination['parameter'] = random_search.best_params_
 
+    #best_model = random_search.best_estimator_
+    ##pred = best_model.predict(X_test)
+    #precision, recall, f1_score, _ = precision_recall_fscore_support(y, pred, average='binary')
+    #total_score = matthews_corrcoef(y, pred) + accuracy_score(y, pred) + precision + recall + f1_score
+    #print("precision: {} recall: {} f1_score: {}".format(precision, recall, f1_score))
+    #print("total avg score: {}".format(total_score / 5)) #todo
+    
+    
     # Print them
     print("Best Score = {:0.6f}".format(best_score), "")
     print("Best Combination, Model {}, Encoder {}, Scaler {}".
           format(best_combination['model'], best_combination['encoder'], best_combination['scaler']))
     print("Hyperparameter {}".format(best_combination['parameter']))
+
     return
 
 
 # Auto Find Best Accuracy
 print("Auto Find Best Accuracy")
-FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,models=None, model_param=None )
+#FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,models=None, model_param=None )
+FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,encoders = None, scalers = None,models=None, model_param=None )
