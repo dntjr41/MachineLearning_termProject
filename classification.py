@@ -107,8 +107,8 @@ df = df[df['VisitorType'] != 'Other']
 
 #Scoring function
 def overall_average_score(actual, prediction):
-    precision, recall, f1_score, _ = precision_recall_fscore_support(
-        actual, prediction, average='binary')
+    precision, recall, f1_score, support = precision_recall_fscore_support(
+        actual, prediction)
     total_score = (matthews_corrcoef(actual, prediction) +
                    accuracy_score(actual, prediction) + precision + recall + f1_score)
     return total_score / 5
