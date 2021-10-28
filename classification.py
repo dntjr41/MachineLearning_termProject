@@ -120,7 +120,7 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
     # Set Encoder
     if encoders is None:
-        encode = [OrdinalEncoder(), OneHotEncoder(), LabelEncoder()]
+        encode = [OrdinalEncoder(), LabelEncoder()]
     else: encode = encoders
 
     # Set Scaler
@@ -131,9 +131,9 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     # Set Model
     if models is None:
         model = [
-            LogisticRegression(),
+            #LogisticRegression(),
             SVC(),
-            GradientBoostingClassifier()
+            #GradientBoostingClassifier()
         ]
     else: model = models
 
@@ -142,8 +142,8 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
         parameter = [
                       # LogisticRegression()
-                     {'penalty':['none','l2'], 'random_state':[0,1], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
-                       'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
+                     # {'penalty':['none','l2'], 'random_state':[0,1], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
+                     #   'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
                       # SVC()
                      {'random_state': [0,1], 'kernel': ['linear', 'rbf', 'sigmoid'],
                        'C': [0.01, 0.1, 1.0, 10.0, 100.0], 'gamma': ['scale', 'auto']},
@@ -186,20 +186,19 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
             df_scaled.columns = scale_col
             # Encoding
             if encode_col is not None:
-                if type(j) == type(OrdinalEncoder()):
-                    df_encoded = pd.DataFrame(j.fit_transform(X[encode_col]))
-                    df_encoded.columns = encode_col
-                    df_encoded.index = df_scaled.index
+                # if encoder is LabelEncoder
+                if type(j) == type(LabelEncoder()):
+                    for i in range(len(encode_col)):
+                        df_encoded[encode_col[i]] = j.fit_transform(X[encode_col[i]])
                     df_prepro = pd.concat([df_scaled, df_encoded], axis=1)
-
-                    #y=pd.DataFrame(j.fit_transform(y)) # todo
                 else:
-                    print("No")
-                    dum = pd.DataFrame(pd.get_dummies(X[encode_col]))
-                    dum.index = df_scaled.index
-                    df_prepro = pd.concat([df_scaled, dum], axis=1)
-
-                    #y=pd.DataFrame(pd.get_dummies(y)) # todo
+                    df_encoded = j.fit_transform(X[encode_col])
+                    df_encoded = pd.DataFrame(df_encoded)
+                    df_encoded.columns = encode_col
+                    df_prepro = pd.concat([df_scaled, df_encoded], axis=1)
+                    print("concat scaled, encoded")
+                    print(df_prepro)
+                # y = pd.DataFrame(j.fit_transform(y))  # todo
             else:
                 df_prepro = df_scaled[pd.get_dummies(y)]
             df_prepro = pd.DataFrame(df_prepro)
