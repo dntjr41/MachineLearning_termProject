@@ -139,10 +139,10 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
     # Set Hyperparameter
     if model_param is None:
-                    
+
         parameter = [
                       # LogisticRegression()
-                     {'penalty':['l1','l2'], 'random_state':[0,1], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
+                     {'penalty':['none','l2'], 'random_state':[0,1], 'C':[0.01, 0.1, 1.0, 10.0, 100.0],
                        'solver':["lbfgs", "sag", "saga"], 'max_iter':[10, 50, 100]},
                       # SVC()
                      {'random_state': [0,1], 'kernel': ['linear', 'rbf', 'sigmoid'],
@@ -151,7 +151,7 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                      {'loss':['deviance','exponential'],
                       'learning_rate':[0.001, 0.1, 1],
                       'n_estimators':[1, 10,100,1000],
-                      'subsample':[0.0001,0.001, 0.1],
+                     'subsample':[0.0001,0.001, 0.1],
                       'min_samples_split':[10,50, 100, 300],
                       'min_samples_leaf':[5, 10, 15,50]}
                      ]
@@ -234,10 +234,10 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
 
 
-                #grid_scorer = make_scorer(overall_average_score, greater_is_better=True)
+                grid_scorer = make_scorer(overall_average_score, greater_is_better=True)
 
                 # Modeling(Using the RandomSearchCV)
-                random_search = RandomizedSearchCV(estimator=z, param_distributions=param, n_jobs=N_JOBS,  cv=setCV)
+                random_search = RandomizedSearchCV(estimator=z, param_distributions=param, n_jobs=N_JOBS,  scoring=grid_scorer,cv=setCV)
                 random_search.fit(X_train, y_train.values.ravel())
                 score = random_search.score(X_test, y_test)
 
@@ -250,14 +250,7 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                     best_combination['model'] = z
                     best_combination['parameter'] = random_search.best_params_
 
-    #best_model = random_search.best_estimator_
-    ##pred = best_model.predict(X_test)
-    #precision, recall, f1_score, _ = precision_recall_fscore_support(y, pred, average='binary')
-    #total_score = matthews_corrcoef(y, pred) + accuracy_score(y, pred) + precision + recall + f1_score
-    #print("precision: {} recall: {} f1_score: {}".format(precision, recall, f1_score))
-    #print("total avg score: {}".format(total_score / 5)) #todo
-    
-    
+
     # Print them
     print("Best Score = {:0.6f}".format(best_score), "")
     print("Best Combination, Model {}, Encoder {}, Scaler {}".
@@ -269,5 +262,4 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
 # Auto Find Best Accuracy
 print("Auto Find Best Accuracy")
-#FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,models=None, model_param=None )
 FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,encoders = None, scalers = None,models=None, model_param=None )
