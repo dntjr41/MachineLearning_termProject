@@ -1,9 +1,15 @@
-# MachineLearning_termProject
-Machine Learning term project
+# MachineLearning PHW2 Auto Clustering
+AutoML - Clustering Menual
+
+# Code + Result file 
+-> [PHW2_이상원, 이민서, 이강욱, 심우석.docx](https://github.com/dntjr41/MachineLearning_termProject/files/7446806/PHW2_.docx)
+
+# Dataset
+-> [housing.csv](https://github.com/dntjr41/MachineLearning_termProject/files/7446827/housing.csv)
 
 # Auto Clustering
 
-############<br>
+<br>
 AutoML (X, y = None, scale_col, encode_col, scalers = None, encoders = None,
          feature_param = None, models = None, model_param = None,
          scores = None, score_param = None)
@@ -23,7 +29,6 @@ Description = When parameters are put in, the plot and scores are output
            Step 3 = Using the final three combinations (without a target value),
                     we compare with the combinations (with a target value)
                - The results are checked through the clustering plot and the silhouette score -
-**************************
 **************************
 
 Input = X: Data Feature
