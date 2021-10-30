@@ -31,17 +31,24 @@ Description = When parameters are put in, the plot and scores are output
                - The results are checked through the clustering plot and the silhouette score -
 **************************
 
-Input = X: Data Feature
+Input = 
+        
+        X: Data Feature
+        
         Y: Data Target (If you have a target value, enter it)
+        
         Scale_col: columns to scaled
+        
         Encode_col: columns to encode
+        
         Scalers: list of scalers
           None: [StandardScaler(), RobustScaler(), MinMaxScaler()]
           If you want to scale other ways, then put the scaler in list.
+          
         Encoders: list of encoders
           None: [OrdinalEncoder(), LabelEncoder()]
           If you want to encode other ways, then put the encoder in list.
-
+       
         Feature: list of features
           None: [PCA(), RandomSelect(), CustomSelect()]
           If you want to set other ways, then put specific feature in list
