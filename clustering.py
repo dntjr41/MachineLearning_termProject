@@ -220,7 +220,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
 
 
                            # Affinity Propagation
-                           {'damping':[0.5, 1.0], 'affinity':['euclidean','precomputed’'],'random_state':[0,1], 'max_iter':[100,200]}]
+                           {'damping':[0.5, 0.8], 'affinity':['euclidean','precomputed’'],'random_state':[0,1], 'max_iter':[100,200]}]
     else:
         model_parameter = model_param
 
