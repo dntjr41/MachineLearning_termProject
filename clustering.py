@@ -202,9 +202,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
 
     # Set Model
     if models is None:
-        model = [KMeans(),
-         GaussianMixture(), AffinityPropagation()
-         ]
+        model = [KMeans(),GaussianMixture(), AffinityPropagation()]
     else:
         model = models
 
@@ -218,7 +216,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                            # GMM(EM) Clustering
                            {'n_components': [2, 3, 4, 5], 'max_iter': [100, 200],
                             'covariance_type': ["spherical", "tied", "diag"],
-                            'n_init': [1, 10, 20], 'random_state': [ 0, 1], 'tol': [1e-5, 1e-3]},
+                            'n_init': [1, 10, 20], 'random_state': ['None',0, 1], 'tol': [1e-5, 1e-3]},
 
 
                            # Affinity Propagation
@@ -290,11 +288,10 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
             # df_prepro, y = smote.fit_resample(df_prepro, y)
             # feature selection (find feature subset : PCA, random select, custom select)
             featureIndex = 0
+            modelIndex = 0
             for z, z_param in zip(feature, feature_parameter):
-                modelIndex = 0
                 for m in model:
                     for z_param_index in z_param:
-
                         # Step1 - Compare Silhouette score
                         # Feature Selection(PCA(), RandomSelection(), CustomSelect()) *
                         # model(KMeans(), GMM(), clarans(), DBSCAN(), OPTICS()) = 15
@@ -328,8 +325,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                              firstScoreFeature[featureIndex][modelIndex] = df_featureSubset.columns
                              firstScoreModel[featureIndex][modelIndex] = best_model
                              firstScoreParameter[featureIndex][modelIndex] = best_params
-
-                modelIndex += 1
+                    modelIndex += 1
                 featureIndex += 1
 
     # Print step1's result
