@@ -1,9 +1,6 @@
-#import gensim
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.metrics import classification_report
 from infoRetrieval import *
-from utils import createOutput
-from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
 def run():
@@ -11,16 +8,12 @@ def run():
   qDocs = parseQuery("Cranfield_collection_HW/cran.qry")
   qToks = tokenize(qDocs, "query")
   qDic = organize(qToks, "query")
-  qIdf = idf(qDic, len(qDocs))
-  qTf = queryTf(qToks)
 
 
   print("Process Abstract Docs")
   absDocs = parseAbsDocs("Cranfield_collection_HW/cran.all.1400")
   absToks = tokenize(absDocs, "abstract")
   absDic = organize(absToks, "abstract")
-  absIdf = idf(absDic, len(absDocs))
-  absTf = abstractTf(absDic,len(absDocs))
 
   # inverted index
   absDic = sorted(absDic.items())
@@ -39,28 +32,26 @@ def run():
     id+=1
 
 
-  # print('===inverted index===')
-  # print(inverted_index)
 
   # testing
   testing_num=1
-  docs_toks=[]
   queries=[]
   docs=[]
   queries_toks = []
-  cos_similarity_matrix = []
   q_d_cos_sim = []
-  count_vectorizer = CountVectorizer()
   tfidf_vectorizer = TfidfVectorizer()
   for i in range(testing_num):
     queries.append(qDocs[i].query)
     queries_toks.append(qToks[i])
+  print('queries_toks: ',queries_toks)
 
   for toks_index in range(len(queries_toks)):
     for tok in queries_toks[toks_index]:
       for word_in_inverted in inverted_index:
         if tok==word_in_inverted[1]:
           for doc_id in word_in_inverted[2]:
+            # print('doc_id: ',doc_id)
+            # docs_toks.append([toks_index,doc_id,absToks[doc_id-1]]) # query token index, document id, document content
             docs.append([doc_id,absDocs[doc_id-1]])
             q=queries[toks_index]
             d=absDocs[doc_id-1]
@@ -69,13 +60,13 @@ def run():
             dense=vector_matrix.todense()
             denselist=dense.tolist()
             df=pd.DataFrame(denselist,columns=feature_names)
-            # print('---df---')
-            # print(df)
+            print('---df---')
+            print(df)
             cosine_similarity_matrix=pd.DataFrame(cosine_similarity(vector_matrix))
-            # print('---cosine_similarity_matrix---')
-            # print(cosine_similarity_matrix)
+            print('---cosine_similarity_matrix---')
+            print(cosine_similarity_matrix)
             cos_sim=cosine_similarity_matrix[0][1]
-            # print('cos_sim: ',cos_sim)
+            print('cos_sim: ',cos_sim)
             q_d_cos_sim.append([toks_index,doc_id,cos_sim]) # query index(0,1,2,3,4) / doc_id / cosine similarity
   print('===q_d_cos_sim===')
   print(q_d_cos_sim)
@@ -94,14 +85,10 @@ def run():
 
   number_of_documents = [5, 10, 15]
   similarity_query = [0.05, 0.1, 0.2]
-  result = []
-  answer=[]
-  precision = 0
-  recall = 0
   precision_recall=[]
   q_d_cos_sim.sort(key=lambda x:x[2],reverse=True)
-  # print('sorted q_d_cos_sim: ')
-  # print(q_d_cos_sim)
+  print('sorted q_d_cos_sim: ')
+  print(q_d_cos_sim)
   query_index=0
   q_d_css=[] # query index에 따른 값들 저장
 
