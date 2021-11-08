@@ -127,9 +127,15 @@ def run():
         print('precision: ',precision)
         recall=round(tp/len(answer),3)
         print('recall: ',recall)
-        precision_recall.append([k,e,precision,recall])
+        f1_score = (precision*recall)/(precision+recall)
+        print('F1 score: ',f1_score)
+        precision_recall.append([k,e,precision,recall,f1_score])
     print('===precision_recall===')
     print(precision_recall)
+    precision_recall_df = pd.DataFrame(precision_recall, columns=['k','e','precision','recall','f1 score'])
+    print('===Best Parameter===')
+    print(precision_recall_df.loc[precision_recall_df['f1 score'].idxmax()])
+
 
 
 
