@@ -31,3 +31,9 @@ document = 'cran.all.1400.txt'
 query = 'cran.qry.txt'
 qrel = 'cranqrel.txt'
 
+with open("Cranfield_collection_HW/cran.all.1400.txt", 'r') as file:
+    lines=file.readlines()
+    for line in lines:
+        print('line: ',line)
+        if ".I" in line:
+            continue
