@@ -83,8 +83,8 @@ def run():
       document=splited[1]
       cranqrel.append([qo,document])
 
-  number_of_documents = [5, 10, 15]
-  similarity_query = [0.05, 0.1, 0.2]
+  number_of_documents =  [5, 10, 15,20,25]
+  similarity_query = [0.05,0.08, 0.1, 0.15, 0.2,0.3 ]
   precision_recall=[]
   q_d_cos_sim.sort(key=lambda x:x[2],reverse=True)
   print('sorted q_d_cos_sim: ')
