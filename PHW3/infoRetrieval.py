@@ -1,16 +1,13 @@
 # import nltk
 import string
-
 import nltk
-from math import exp, expm1
-import math
-
-from nltk import PorterStemmer, WordNetLemmatizer
-from nltk.corpus import stopwords
-
+from nltk import WordNetLemmatizer
+from stop_list import *
 from query import Query
 
-
+# Descirption = Read Query and parse queries
+# Input  = FileName
+# Output = Preprocessed queries
 def parseQuery(filename):
   with open(filename,"r") as f:
     IDS, queries, WS = [], [], []
@@ -18,6 +15,7 @@ def parseQuery(filename):
     query_docs = []
     cont = False
     string = ""
+
     for line in f:
       #print(line)
       if ".I" in line:
@@ -27,16 +25,21 @@ def parseQuery(filename):
         string = ""
         part = line.split()
         IDS.append(part[1])
+
       if ".W" in line:
         cont = True
+
       if cont == True:
         string = string + line
+
     if len(string) > 0 :
       queries.append(string)
+
     for query in queries:
       query = query[2:]
       new_queries.append(query)
     length = len(IDS)
+
     for count in range(length):
       I = IDS[count]
       qu = new_queries[count]
@@ -44,6 +47,9 @@ def parseQuery(filename):
     f.close()
     return query_docs
 
+# Description = Read Documents and parse documents
+# Input  = FileName
+# Output = Preprocessed documents
 def parseAbsDocs(filename):
   with open(filename,"r") as f:
     abstracts = []
@@ -68,8 +74,9 @@ def parseAbsDocs(filename):
     f.close()
     return new_abstracts
 
-
-
+# Description = Tokenize queries
+# Input  = Queries
+# Output = tokenized queries
 def tokenize(docs, docType="query"):
   if docType == "query":
     qToks = []
@@ -82,7 +89,7 @@ def tokenize(docs, docType="query"):
       sentences = nltk.sent_tokenize(abstract)
       toks = []
       for sentence in sentences:
-        stopset = [word for word in stop_list.closed_class_stop_words]
+        stopset = [word for word in closed_class_stop_words]
         stop_punc = list(string.punctuation)
         stops = stopset+stop_punc
         tokens = nltk.wordpunct_tokenize(sentence)
@@ -95,6 +102,9 @@ def tokenize(docs, docType="query"):
       absToks.append(toks)
     return absToks
 
+# Description
+# Input  = Tokenized documents
+# Output = Inverted index
 def organize(tokens, docType):
   numDocs = len(tokens)
   dic = {}
@@ -107,6 +117,7 @@ def organize(tokens, docType):
           dic[tok][count] = 1
         else:
           dic[tok][count] = dic[tok][count] +1
+
     if docType == "abstract":
       for sentence in doc:
         for tok in sentence:
@@ -117,4 +128,3 @@ def organize(tokens, docType):
             dic[tok][count] = dic[tok][count] + 1
     count = count + 1
   return dic
-

@@ -4,6 +4,9 @@ from nltk.corpus import stopwords
 from math import exp, expm1
 import math
 
+# Description = Tokenize, and stop word removal for queries
+# Input  = query
+# Output = text preprocessed queries
 class Query:
   def __init__(self,ID,query):
     self.ID = ID
@@ -23,4 +26,3 @@ class Query:
       if not (token.isdigit() or token[0] == "-" and token[1:].isdigit()):
         filteredToks.append(token)
     return filteredToks
-
