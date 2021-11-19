@@ -161,18 +161,20 @@ def overall_average_score(actual,prediction):
 df.columns = df.columns.to_series().apply(lambda x: x.strip())
 
 #####################################################################
-# FindBestAccuracy(X, y, scale_col, encode_col, scalers=None, encoders=None,
+# AutoML(X, y, scale_col, encode_col, scalers=None, encoders=None,
 #                       models=None, model_param=None, cv=None, n_jobs=None)
 # Description = When parameters are put in, the highest score and the best model are printed
-#Input = X: Data Feature
-#        Y: Data Target
-#        Scale_col = columns to scaled
-#        Encode_col = columns to encoded
-#        Scalers: list of scalers
+#               And Double check the parameter setting, Add more parameters and compare the values.
+#
+# Input = X: Data Feature
+#         Y: Data Target
+#         Scale_col = columns to scaled
+#         Encode_col = columns to encoded
+#         Scalers: list of scalers
 #            None: [StandardScaler(), RobustScaler(), MinMaxScaler(), MaxAbsScaler()]
-#        Encoder: list of encoders
+#         Encoder: list of encoders
 #            None: [OrdinalEncoder(), LabelEncoder()]
-#        Models: list of models
+#         Models: list of models
 #            None: [LogisticRegression(), SVC(), GradientBoostingClassifier()]
 #
 #         Model_param: list of model’s hyperparameter
@@ -191,7 +193,11 @@ df.columns = df.columns.to_series().apply(lambda x: x.strip())
 #         N_jobs = number of jobs to run in parallel. Training the estimator and computing score are
 #                  parallelized over the cross-validation splits
 # 	        None: 1
-def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
+#
+# Output = Best Accuracy, Combination, Plots
+#          Final Result (Double Check AutoML)
+
+def AutoML(X, y, scale_col, encode_col, scalers=None, encoders=None,
                       models=None, model_param=None, cv=None, n_jobs=None):
 
     # Set Encoder
@@ -393,8 +399,6 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     ax.yaxis.set_ticklabels(['False','True'])
     plt.show()
 
-
-
     # Print SVC
     print("\nSVC")
     print("Best Score = {:0.6f}".format(best_score2), "")
@@ -451,12 +455,21 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     plt.plot([0,1],[0,1], linestyle='--', color='black')
     plt.show()
 
+    # Double Check AutoML (Wider Parameter set)
+    auto_param = {'loss':['deviance', 'exponential'], 'learning_rate':[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1],
+                  'n_estimators':[1, 5, 10, 50, 100, 500], 'subsample':[0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1],
+                  'min_samples_split':[10, 20, 30, 40, 50, 100, 150], 'min_samples_leaf':[5,6,7,8,9,10,11,12,13,14,15]}
 
+    auto_search = RandomizedSearchCV(estimator=GradientBoostingClassifier(), param_distributions=auto_param,
+                                     n_jobs=N_JOBS, cv=setCV)
+
+    auto_search.fit(X_train, y_train.values.ravel())
+    auto_score = auto_search.score(X_test, y_test)
+    print("f1 Score:", f1_score(y_test, pred, average='binary'))
 
     return
 
-
 # Auto Find Best Accuracy
 # print("Auto Find Best Accuracy")
-FindBestAccruacy(X_data, y_data, scale_col=scale_col, encode_col=encode_col,
+AutoML(X_data, y_data, scale_col=scale_col, encode_col=encode_col,
                  encoders=None, scalers=None, models=None, model_param=None)
