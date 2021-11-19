@@ -1,4 +1,7 @@
 # Import Class Libraries
+import warnings
+warnings.filterwarnings("ignore")
+
 import eyeball as eyeball
 import pandas as pd
 import numpy as np
@@ -8,11 +11,10 @@ import seaborn as sns
 import sklearn
 import plotly.express as px
 from sklearn import metrics
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 from scipy.stats import stats
-from pyclustering.cluster.clarans import clarans
 from sklearn.mixture import GaussianMixture
-from sklearn.cluster import KMeans, AffinityPropagation
+from sklearn.cluster import KMeans, MeanShift, AffinityPropagation
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
@@ -20,7 +22,7 @@ from sklearn.metrics import silhouette_score
 sns.set()
 df = pd.read_csv('online_shoppers_intention.csv')
 
-print(list(df.columns.values))
+# print(list(df.columns.values))
 feature_label = ['Administrative', 'Administrative_Duration', 'Informational',
                  'Informational_Duration', 'ProductRelated', 'ProductRelated_Duration',
                  'BounceRates', 'ExitRates', 'PageValues', 'SpecialDay', 'Browser', 'Region',
@@ -36,8 +38,8 @@ df = df.fillna(method='ffill')
 df_cate = df['Revenue']
 
 # Check null value (Cleaned Data)
-print("\n***** Check null (Cleaned Data) *****")
-print(df.isna().sum())
+# print("\n***** Check null (Cleaned Data) *****")
+# print(df.isna().sum())
 
 # Remove Outliers with z-score
 # Description = Use the z-score to handle outlier over mean +- 3SD
@@ -53,7 +55,6 @@ for n in range(len(scale_col)):
     idx = None
     idx = find_outliers(df.iloc[:, n])
     df = df.loc[idx == False]
-
 
 for n in [11, 12, 14]:
     idx = None
@@ -77,17 +78,18 @@ def cv_silhouette_scorer(estimator, X):
         labels = estimator.fit_predict(X)
         return silhouette_score(X, labels, metric='euclidean')
 
+
     # Calculate and return Silhouette score
     else:
-        estimator.fit(X)
-        cluster_labels = estimator.labels_
+        cluster_labels = estimator.fit_predict(X)
+        #cluster_labels = estimator.labels_
         num_labels = len(set(cluster_labels))
         num_samples = len(X.index)
         if num_labels == 1 or num_labels == num_samples:
             return -1
+
         else:
             return silhouette_score(X, cluster_labels)
-
 
 # purity를 구해주는 함수
 def purity_score(y_true, y_pred):
@@ -95,7 +97,6 @@ def purity_score(y_true, y_pred):
     contingency_matrix = metrics.cluster.contingency_matrix(y_true, y_pred)
     # return purity
     return np.sum(np.amax(contingency_matrix, axis=0)) / np.sum(contingency_matrix)
-
 
 # Description = randomly determines features
 # input  = Dataset, number of feature
@@ -141,7 +142,6 @@ class CustomSelect:
         # Return Dataset
         return result
 
-
 # Description = It converts data according to each feature selection method
 #               If PCA is reset column name
 #               If RandomSelect is randomly determines features
@@ -181,7 +181,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
 
     # Set Scaler
     if scalers is None:
-        scale = [StandardScaler(), MinMaxScaler(), RobustScaler()]
+        scale = [StandardScaler(), RobustScaler()]
     else:
         scale = scalers
 
@@ -189,40 +189,35 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
     # If it's None value, select all features, set PCA, selected features, random select
     if features is None:
         feature = [PCA(), RandomSelect(), CustomSelect()]
-        customSelectParameter = [['BounceRates','ExitRates'],['BounceRates','PageValues'],['BounceRates','PageValues'],
-                                 ['ExitRates','PageValues'],['ExitRates','VisitorType'],
-                                 ['PageValues', 'VisitorType'],
-                                 ['BounceRates','ExitRates','PageValues'],['BounceRates','ExitRates','VisitorType'],
-                                 ['VisitorType','ExitRates','PageValues']]
+        customSelectParameter = [['BounceRates','ExitRates'], ['ExitRates','PageValues'],
+                                 ['BounceRates','ExitRates','PageValues'],
+                                 ['PageValues','ExitRates','VisitorType']]
         feature_parameter = [[3, 4, 5], [3, 4, 5], customSelectParameter]
-
     else:
         feature = features
         feature_parameter = feature_param
 
     # Set Model
-    if models is None:
-        model = [KMeans(),GaussianMixture(), AffinityPropagation()]
-    else:
-        model = models
+    model = {"kmeans": KMeans(),
+             "gmm": GaussianMixture(),
+             "meanshift": MeanShift()
+             }
 
     # Set Model parameter
-    if model_param is None:
-                           # KMeas Clustering
-        model_parameter = [{'n_clusters': [2, 3, 4, 5], 'init': ["k-means++", "random"],
-                            'n_init': [1, 10, 20], 'random_state': [0, 1],
-                            'max_iter': [100, 200]},
+                       # KMeans Clustering
+    model_parameter = {"kmeans": {'n_clusters': [2, 3, 4], 'init': ["k-means++", "random"],
+                                 'n_init': [1, 10, 20], 'random_state': [0, 1]},
+                                 # 'max_iter': [100, 200]},
 
-                           # GMM(EM) Clustering
-                           {'n_components': [2, 3, 4, 5], 'max_iter': [100, 200],
-                            'covariance_type': ["spherical", "tied", "diag"],
-                            'n_init': [1, 10, 20], 'random_state': ['None',0, 1], 'tol': [1e-5, 1e-3]},
+                        # GMM(EM) Clustering
+                        "gmm":{'n_components': [2, 3, 4], # 'max_iter': [100, 200],
+                               'covariance_type': ["spherical", "tied", "diag"],
+                               'n_init': [1, 10, 20], 'random_state': [0, 1], 'tol': [1e-5, 1e-3]},
 
-
-                           # Affinity Propagation
-                           {'damping':[0.5, 0.8], 'affinity':['euclidean','precomputed’'],'random_state':[0,1], 'max_iter':[100,200]}]
-    else:
-        model_parameter = model_param
+                        # MeanShift
+                        "meanshift":{"bandwidth": [0.5, 1, 2]}
+                                   #   'cluster_all': ['True', 'False']}
+                       }
 
     # Set Score
     if scores is None:
@@ -240,13 +235,12 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
     # [  PCA , Model1][  PCA , Model2]...[  PCA , Model5]
     # [Random, Model1][Random, Model2]...[Random, Model5]
     # [Custom, Model1][Custom, Model2]...[Custom, Model5]
-    firstScore = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
-    firstScoreScaler = [[None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None]]
-    firstScoreEncoder = [[None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None]]
-    firstScoreFeature = [[None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None]]
-    firstScoreModel = [[None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None]]
-    firstScoreParameter = [[None, None, None, None, None], [None, None, None, None, None],
-                           [None, None, None, None, None]]
+    firstScore = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    firstScoreScaler = [[None, None, None], [None, None, None], [None, None, None]]
+    firstScoreEncoder = [[None, None, None], [None, None, None], [None, None, None]]
+    firstScoreFeature = [[None, None, None], [None, None, None], [None, None, None]]
+    firstScoreModel = [[None, None, None], [None, None, None], [None, None, None]]
+    firstScoreParameter = [[None, None, None], [None, None, None], [None, None, None]]
 
     cv = [(slice(None), slice(None))]
 
@@ -265,6 +259,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
             # Scaling
             df_scaled = pd.DataFrame(i.fit_transform(X[scale_col]))
             df_scaled.columns = scale_col
+
             # Encoding
             if encode_col is not None:
                 # if encoder is LabelEncoder
@@ -277,24 +272,20 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                     df_encoded = pd.DataFrame(df_encoded)
                     df_encoded.columns = encode_col
                     df_prepro = pd.concat([df_scaled, df_encoded], axis=1)
-                    print("concat scaled, encoded")
-                    print(df_prepro)
-                # y = pd.DataFrame(j.fit_transform(y))  # todo
             else:
                 df_prepro = df_scaled[pd.get_dummies(y)]
-
             df_prepro = pd.DataFrame(df_prepro)
-            # smote = SMOTE(random_state=len(df_prepro))
-            # df_prepro, y = smote.fit_resample(df_prepro, y)
+
             # feature selection (find feature subset : PCA, random select, custom select)
-            featureIndex = 0
             modelIndex = 0
+            featureIndex = 0
             for z, z_param in zip(feature, feature_parameter):
-                for m in model:
+                for model_key,m in model.items():
+
                     for z_param_index in z_param:
                         # Step1 - Compare Silhouette score
                         # Feature Selection(PCA(), RandomSelection(), CustomSelect()) *
-                        # model(KMeans(), GMM(), clarans(), DBSCAN(), OPTICS()) = 15
+                        # model(KMeans(), GMM(), MeanShift()) = 9
                         # Find a Combination with the best silhouette score in each combination
 
                         # If feature selection is PCA -> Iterate n_components 3,4,5
@@ -303,9 +294,10 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                         # A feature subset that fits the selection and parameter came out
                         df_featureSubset = makefeatureSubset(df_prepro, z, z_param_index)
 
-                        random_search = RandomizedSearchCV(estimator=m, param_distributions=model_parameter[modelIndex], scoring=cv_silhouette_scorer, cv=cv)
+                        randomized_search = RandomizedSearchCV(estimator=m, param_distributions=model_parameter[model_key],
+                                                               scoring=cv_silhouette_scorer, cv=cv)
                         # fit Randomized search
-                        result = random_search.fit(df_featureSubset)
+                        result = randomized_search.fit(df_featureSubset)
                         best_model = result.best_estimator_
                         best_params = result.best_params_
                         pred = best_model.fit_predict(df_featureSubset)
@@ -325,12 +317,12 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                              firstScoreFeature[featureIndex][modelIndex] = df_featureSubset.columns
                              firstScoreModel[featureIndex][modelIndex] = best_model
                              firstScoreParameter[featureIndex][modelIndex] = best_params
-                    modelIndex += 1
+                modelIndex += 1
                 featureIndex += 1
 
     # Print step1's result
     for i in range(0, 3):
-        for j in range(0, 5):
+        for j in range(0, 3):
             print("최종 결과", i, " ", j)
             print(firstScoreScaler[i][j])
             print(firstScoreEncoder[i][j])
@@ -340,7 +332,8 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
             print(firstScore)
             print(print())
 
-    # Step 2 = If there is a target value, Among the three Feature Selection (PCA(), RandomSelect(), CustomSelect()),
+    # Step 2 = If there is a target value, Among the three Feature Selection
+    #          (PCA(), RandomSelect(), CustomSelect()),
     #          check which model has the highest purity and return three results
     for a in range(1, 3):
         for b in range(0, 3):
@@ -374,25 +367,17 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                 print("**** Apply feature selection ****\n")
                 print(df_new_score_and_encode)
 
-            df_values = df_new_score_and_encode.values
+            #df_values = df_new_score_and_encode.values
 
             # model fitting
             if firstScoreModel[a][b] is not None:
                 pred_val = firstScoreModel[a][b].fit_predict(df_new_score_and_encode)
-                # print("predict value shape: {}".format(pred_val.shape))
-                # print("**** Predicted Value ****\n")
-                # print(pred_val)
-
-            min_y = np.min(y)
-            max_y = np.max(y)
-            gap = max_y - min_y
-            gap /= len(np.unique(pred_val))
 
             labels = []
             for i in range(len(np.unique(pred_val))):
                 labels.append(i)
 
-            temp_df = pd.cut(y["median_house_value"], bins=len(np.unique(pred_val)), labels=labels, include_lowest=True)
+            temp_df = pd.cut(y["Revenue"], bins=len(np.unique(pred_val)), labels=labels, include_lowest=True)
             temp_df = temp_df.to_numpy()
 
             print("**** Purity Score ****")
@@ -443,11 +428,11 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
             df_new_score_and_encode_y=pd.concat([df_new_score_and_encode,y_second_scaled],axis=1)
 
         # Using the plot and silhouette score
-        # Compare the clustering results with medianHouseValue(target)
+        # Compare the clustering results with Revenue(target)
         # feature values in the original dataset
 
         # Without target value
-        model = secondScoreModel[i]
+        #model = secondScoreModel[i]
         print(secondScoreScaler[i])
         print(secondScoreEncoder[i])
         print(secondScoreFeature[i])
@@ -476,8 +461,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
         score = silhouette_score(df_new_score_and_encode_y, pred_yes)
         print("Silhouette score = ", score)
 
-
 # Auto Find Best Accuracy
 print("Auto Find Best Accuracy")
-#AutoML(X_data,y_data, scale_col=scale_col, encode_col=encode_col, models=None, model_param=None)
-AutoML(X_data, y_data, scale_col=scale_col, encode_col=encode_col,encoders = None, scalers = None,models=None, model_param=None )
+AutoML(X_data, y_data, scale_col=scale_col, encode_col=encode_col, encoders=None,
+       scalers=None, models=None, model_param=None)
