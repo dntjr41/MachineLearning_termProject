@@ -20,59 +20,21 @@ from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
 from sklearn.metrics import silhouette_score
 sns.set()
-########################################################################################################################
-# AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=None,
-#            features=None, feature_param=None, models=None, model_param=None,
-#            scores=None, score_param=None)
-# **************************************************************************************
-# ******************************** Must Read *******************************************
-# **************************************************************************************
-# Descripiton= When parameters are put in, the plot and scores are output
-#              The method of producing results in AutoML function consists of three main steps
-#
-#              Step 1 = Comparing using the silhouette score.
-#                       Feature selection(PCA(),RandomSelect(),CustomSelect()) * Model(KMeans(),GMM(),MeanShift()) = 9,
-#                       Find a combination with the best silhouette score in each combination
-#
-#              Step 2 = Compare it once more using the purity score to select the best model.
-#                       Model(KMeans(),GMM(),MeanShift()) = 3
-#
-#              Step 3 = Visualize using some plot for each model.
-# ***************************************************************************************
-# ***************************************************************************************
-#
-# Input = X: Data Feature
-#         Y: Data Target
-#         Scale_col: columns to scales
-#         Encode_col: columns to encode
-#         Scalers: list of scalers
-#                   None:[StandardScaler(), RobustScaler()]
-#         Encoders: list of encoders
-#                   None:[OrdinalEncoder(),LabelEncoder()]
-#         Feature: list of features
-#                  None: [PCA(),RandomSelect(),CustomSelect()]
-#         Feature_param: feature selection method's parameter
-#                        PCA()'s None: [n_components: None(int)]
-#                        RandomSelect()'s None: [number_of_features: None(int)]
-#                        CustomSelect()'s None: [combination_of_features: None(list)]
-#
-#         Models: list of models
-#                 None:[KMeans(),GMM(),MeanShift()]
-#         Model_param: list of model's hyperparameter
-#                       KMeans()'s None:[n_clusters: None(int), init: None(k-means++, random),
-#                                  n_init: None(int), random_state:None(int)]
-#                       GMM()'s None:[n_components: None (int), covariance_type: None (spherical, tied, diag),
-#                                  n_init: None (int), Random_state: None (int), tol: None (float)]
-#                       MeanShift()'s None:[bandwidth: None(int)]
-#         Scores: list of score methods
-#                 None: [silhouette_score(), purity(), eyeball()]
-#         Score_param: list of score method's hyperparemeter
-#                       Silhouette_score()’s None: [metric: None (str, callable), random_state: None (int)]
-#                       Purity()’s None: None
-#                       eyeball()'s None: None
-#         Output=some scores, plots
-########################################################################################################################
 
+#####################################################################
+# Dataset = Online Shoppers Purchasing Intention
+# Feature = Administrative, Administrative Duration, Informational,
+#           Informational Duration, Product Related, Product Related Duration,
+#           Bounce Rate, Exit Rate, Page Value, Special Day, Browser, Region,
+#           Traffic Type, Visitor Type, Weekend, Operating Systems, Month
+# Target  = Revenue
+
+# Number of dataset = 12,330
+# Numerical value   = Administrative, Administrative Duration, Informational,
+#                     Informational Duration, Product Related, Product Related Duration,
+#                     Bounce Rate, Exit Rate, Page Value, Special Day
+# Categorical value = Browser, Region, Traffic Type, Visitor Type, Weekend,
+#                     Operating Systems, Month, Revenue
 df = pd.read_csv('online_shoppers_intention.csv')
 
 # print(list(df.columns.values))
@@ -219,7 +181,61 @@ def makefeatureSubset(X, selection, n_feature):
 
     return x_result
 
-
+########################################################################################################################
+# AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=None,
+#            features=None, feature_param=None, models=None, model_param=None,
+#            scores=None, score_param=None)
+# **************************************************************************************
+# ******************************** Must Read *******************************************
+# **************************************************************************************
+# Descripiton= When parameters are put in, the plot and scores are output
+#              The method of producing results in AutoML function consists of three main steps
+#
+#              Step 1 = Comparing using the silhouette score.
+#                       Feature selection(PCA(),RandomSelect(),CustomSelect()) * Model(KMeans(),GMM(),MeanShift()) = 9,
+#                       Find a combination with the best silhouette score in each combination
+#
+#              Step 2 = Compare it once more using the purity score to select the best model.
+#                       Model(KMeans(),GMM(),MeanShift()) = 3
+#
+#              Step 3 = Visualize using some plot for each model.
+#
+#              Step 4 = Double check for the best model combination, add more parameters and compare the values.
+# ***************************************************************************************
+# ***************************************************************************************
+#
+# Input = X: Data Feature
+#         Y: Data Target
+#         Scale_col: columns to scales
+#         Encode_col: columns to encode
+#         Scalers: list of scalers
+#                   None:[StandardScaler(), RobustScaler()]
+#         Encoders: list of encoders
+#                   None:[OrdinalEncoder(),LabelEncoder()]
+#         Feature: list of features
+#                  None: [PCA(),RandomSelect(),CustomSelect()]
+#         Feature_param: feature selection method's parameter
+#                        PCA()'s None: [n_components: None(int)]
+#                        RandomSelect()'s None: [number_of_features: None(int)]
+#                        CustomSelect()'s None: [combination_of_features: None(list)]
+#
+#         Models: list of models
+#                 None:[KMeans(),GMM(),MeanShift()]
+#         Model_param: list of model's hyperparameter
+#                       KMeans()'s None:[n_clusters: None(int), init: None(k-means++, random),
+#                                  n_init: None(int), random_state:None(int)]
+#                       GMM()'s None:[n_components: None (int), covariance_type: None (spherical, tied, diag),
+#                                  n_init: None (int), Random_state: None (int), tol: None (float)]
+#                       MeanShift()'s None:[bandwidth: None(int)]
+#         Scores: list of score methods
+#                 None: [silhouette_score(), purity(), eyeball()]
+#         Score_param: list of score method's hyperparemeter
+#                       Silhouette_score()’s None: [metric: None (str, callable), random_state: None (int)]
+#                       Purity()’s None: None
+#                       eyeball()'s None: None
+#
+# Output = some scores, plots
+########################################################################################################################
 def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=None,
            features=None, feature_param=None, models=None, model_param=None,
            scores=None, score_param=None):
@@ -241,7 +257,9 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
     # Set Feature
     # If it's None value, select all features, set PCA, selected features, random select
     if features is None:
-        feature = [PCA(), RandomSelect(), CustomSelect()]
+        feature = [PCA(), RandomSelect()
+            #, CustomSelect()
+                   ]
         customSelectParameter = [['BounceRates','ExitRates'], ['ExitRates','PageValues'],
                                  ['BounceRates','ExitRates','PageValues'],
                                  ['PageValues','ExitRates','VisitorType']]
@@ -252,18 +270,18 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
 
     # Set Model
     model = {"kmeans": KMeans(),
-             "gmm": GaussianMixture(),
-             "meanshift": MeanShift()
+             "gmm": GaussianMixture()
+             # "meanshift": MeanShift()
              }
 
     # Set Model parameter
                        # KMeans Clustering
-    model_parameter = {"kmeans": {'n_clusters': [2, 3, 4], 'init': ["k-means++", "random"],
+    model_parameter = {"kmeans": {'n_clusters': [5,6,7], 'init': ["k-means++", "random"],
                                  'n_init': [1, 10, 20], 'random_state': [0, 1]},
                                  # 'max_iter': [100, 200]},
 
                         # GMM(EM) Clustering
-                        "gmm":{'n_components': [2, 3, 4], # 'max_iter': [100, 200],
+                        "gmm":{'n_components': [5,6,7], # 'max_iter': [100, 200],
                                'covariance_type': ["spherical", "tied", "diag"],
                                'n_init': [1, 10, 20], 'random_state': [0, 1], 'tol': [1e-5, 1e-3]},
 
@@ -334,7 +352,7 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
             featureIndex = 0
             for z, z_param in zip(feature, feature_parameter):
                 for model_key,m in model.items():
-
+                    print('m: ',m)
                     for z_param_index in z_param:
                         # Step1 - Compare Silhouette score
                         # Feature Selection(PCA(), RandomSelection(), CustomSelect()) *
@@ -353,12 +371,160 @@ def AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=No
                         result = randomized_search.fit(df_featureSubset)
                         best_model = result.best_estimator_
                         best_params = result.best_params_
-                        pred = best_model.fit_predict(df_featureSubset)
-                        score = silhouette_score(df_featureSubset, pred)
-                        print("현재 selection : ", z, "\n현재 모델 : ", m)
-                        print(best_model)
-                        print(best_params)
-                        print("score: ", score)
+                        print('best params type: ',type(best_params))
+                        print('best params: ',best_params)
+                        best_score=0
+                        before_i=0
+                        if m is KMeans():
+                            for i in range(5,8):
+                                best_params['n_clusters']=i
+
+                                pred = best_model.fit_predict(df_featureSubset)
+                                score = silhouette_score(df_featureSubset, pred)
+                                if before_i==0:
+                                    before_i = i
+                                    continue
+                                if best_score<score and before_i<i:
+                                    trend=0 # ascending
+                                elif best_score<score and before_i>i:
+                                    trend=1 # descending
+                                before_i=i
+                            if trend==0: # ascending
+                                for i in range(7,12):
+                                    model_parameter['kmeans']['n_clusters']=i
+                                    randomized_search=RandomizedSearchCV(estimator=m,param_distributions=model_parameter[0],scoring=cv_silhouette_scorer,cv=cv)
+                                    result = randomized_search.fit(df_featureSubset)
+                                    best_model = result.best_estimator_
+                                    best_params = result.best_params_
+                                    pred = best_model.fit_predict(df_featureSubset)
+                                    score = silhouette_score(df_featureSubset, pred)
+                                    print('best score: ',best_score)
+                                    print('score: ',score)
+                                    if best_score<score:
+                                        best_score=score
+                                    elif score<best_score:
+                                        break
+                            elif trend==1: # descending
+                                for i in range(4,2,-1):
+                                    model_parameter['kmeans']['n_clusters'] = i
+                                    randomized_search = RandomizedSearchCV(estimator=m,
+                                                                           param_distributions=model_parameter[0],
+                                                                           scoring=cv_silhouette_scorer, cv=cv)
+                                    result = randomized_search.fit(df_featureSubset)
+                                    best_model = result.best_estimator_
+                                    params = result.best_params_
+                                    pred = best_model.fit_predict(df_featureSubset)
+                                    score = silhouette_score(df_featureSubset, pred)
+                                    print('best score: ', best_score)
+                                    print('score: ', score)
+                                    if best_score < score:
+                                        best_score = score
+                                        best_params=params
+                                    elif score < best_score:
+                                        break
+                            print("Final Best Score: ",best_score)
+                            print("Final Best Parameters: ",best_params)
+                            # print("현재 selection : ", z, "\n현재 모델 : ", m)
+                            # print(best_model)
+                            # print(best_params)
+                            # print("score: ", score)
+                        elif m is GaussianMixture():
+                            for i in range(5, 8):
+                                best_params['n_components'] = i
+                                pred = best_model.fit_predict(df_featureSubset)
+                                score = silhouette_score(df_featureSubset, pred)
+                                if before_i == 0:
+                                    before_i = i
+                                    continue
+                                if best_score < score and before_i < i:
+                                    trend = 0  # ascending
+                                elif best_score < score and before_i > i:
+                                    trend = 1  # descending
+                                before_i = i
+                            if trend==0: # ascending
+                                for i in range(7,12):
+                                    model_parameter['gmm']['n_components']=i
+                                    randomized_search=RandomizedSearchCV(estimator=m,param_distributions=model_parameter[0],scoring=cv_silhouette_scorer,cv=cv)
+                                    result = randomized_search.fit(df_featureSubset)
+                                    best_model = result.best_estimator_
+                                    best_params = result.best_params_
+                                    pred = best_model.fit_predict(df_featureSubset)
+                                    score = silhouette_score(df_featureSubset, pred)
+                                    print('best score: ',best_score)
+                                    print('score: ',score)
+                                    if best_score<score:
+                                        best_score=score
+                                    elif score<best_score:
+                                        break
+                            elif trend==1: # descending
+                                for i in range(4,2,-1):
+                                    model_parameter['gmm']['n_components'] = i
+                                    randomized_search = RandomizedSearchCV(estimator=m,
+                                                                           param_distributions=model_parameter[0],
+                                                                           scoring=cv_silhouette_scorer, cv=cv)
+                                    result = randomized_search.fit(df_featureSubset)
+                                    best_model = result.best_estimator_
+                                    params = result.best_params_
+                                    pred = best_model.fit_predict(df_featureSubset)
+                                    score = silhouette_score(df_featureSubset, pred)
+                                    print('best score: ', best_score)
+                                    print('score: ', score)
+                                    if best_score < score:
+                                        best_score = score
+                                        best_params=params
+                                    elif score < best_score:
+                                        break
+                            print("Final Best Score: ",best_score)
+                            print("Final Best Parameters: ",best_params)
+                        elif m is MeanShift():
+                            for i in range(len(model_parameter['meanshift']['bandwidth'])):
+                                best_params['bandwidth']=i
+                                pred = best_model.fit_predict(df_featureSubset)
+                                score = silhouette_score(df_featureSubset, pred)
+                                if before_i == 0:
+                                    before_i = i
+                                    continue
+                                if best_score < score and before_i < i:
+                                    trend = 0  # ascending
+                                elif best_score < score and before_i > i:
+                                    trend = 1  # descending
+                                before_i = i
+                            if trend==0: # ascending
+                                for i in range(7,12):
+                                    model_parameter['meanshift']['bandwidth']=i
+                                    randomized_search=RandomizedSearchCV(estimator=m,param_distributions=model_parameter[0],scoring=cv_silhouette_scorer,cv=cv)
+                                    result = randomized_search.fit(df_featureSubset)
+                                    best_model = result.best_estimator_
+                                    best_params = result.best_params_
+                                    pred = best_model.fit_predict(df_featureSubset)
+                                    score = silhouette_score(df_featureSubset, pred)
+                                    print('best score: ',best_score)
+                                    print('score: ',score)
+                                    if best_score<score:
+                                        best_score=score
+                                    elif score<best_score:
+                                        break
+                            elif trend==1: # descending
+                                for i in range(4,2,-1):
+                                    model_parameter['meanshift']['bandwidth'] = i
+                                    randomized_search = RandomizedSearchCV(estimator=m,
+                                                                           param_distributions=model_parameter[0],
+                                                                           scoring=cv_silhouette_scorer, cv=cv)
+                                    result = randomized_search.fit(df_featureSubset)
+                                    best_model = result.best_estimator_
+                                    params = result.best_params_
+                                    pred = best_model.fit_predict(df_featureSubset)
+                                    score = silhouette_score(df_featureSubset, pred)
+                                    print('best score: ', best_score)
+                                    print('score: ', score)
+                                    if best_score < score:
+                                        best_score = score
+                                        best_params=params
+                                    elif score < best_score:
+                                        break
+                            print("Final Best Score: ",best_score)
+                            print("Final Best Parameters: ",best_params)
+
 
                         if firstScore[featureIndex][modelIndex] == 0 or firstScore[featureIndex][modelIndex] < score:
                              print(featureIndex)
