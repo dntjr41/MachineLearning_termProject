@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import purity
 import seaborn as sns
 import warnings
-
+import seaborn as sns
 from sklearn import metrics
 
 warnings.filterwarnings("ignore")
@@ -20,7 +20,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import GradientBoostingClassifier
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import precision_recall_fscore_support, matthews_corrcoef, accuracy_score, make_scorer, f1_score, \
-    classification_report, roc_curve, confusion_matrix
+    classification_report, roc_curve, confusion_matrix, plot_confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 
 sns.set()
@@ -42,7 +42,7 @@ from scipy.stats import stats
 # Categorical value = Browser, Region, Traffic Type, Visitor Type, Weekend,
 #                     Operating Systems, Month, Revenue
 
-df = pd.read_csv('online_shoppers_intention.csv')
+df = pd.read_csv('/Users/kohyojin/Desktop/SoftWare/software2021/2021-2/machine learning/term_project/online_shoppers_intention.csv')
 
 feature_label = ['Administrative', 'Administrative_Duration', 'Informational',
                  'Informational_Duration', 'ProductRelated', 'ProductRelated_Duration',
@@ -150,9 +150,9 @@ y_data = df.loc[:, target_label]
 X_data = df.drop(target_label, axis=1)
 
 ##############################################################################
-# Description =
-# Input  =
-# Output =
+# Description = When actual and prediction vales are put in, the mean of prediction + recall + f1 score + accuracy is output
+# Input  = actual value, predicted value
+# Output = (accuracy + prediction + recall + f1 score) / 5
 # Scoring function
 def overall_average_score(actual,prediction):
     precision, recall, f1_score, _ = precision_recall_fscore_support(actual, prediction, average='binary')
@@ -160,8 +160,37 @@ def overall_average_score(actual,prediction):
     return total_score/5
 df.columns = df.columns.to_series().apply(lambda x: x.strip())
 
-###############################################################################
+#####################################################################
+# FindBestAccuracy(X, y, scale_col, encode_col, scalers=None, encoders=None,
+#                       models=None, model_param=None, cv=None, n_jobs=None)
+# Description = When parameters are put in, the highest score and the best model are printed
+#Input = X: Data Feature
+#        Y: Data Target
+#        Scale_col = columns to scaled
+#        Encode_col = columns to encoded
+#        Scalers: list of scalers
+#            None: [StandardScaler(), RobustScaler(), MinMaxScaler(), MaxAbsScaler()]
+#        Encoder: list of encoders
+#            None: [OrdinalEncoder(), LabelEncoder()]
+#        Models: list of models
+#            None: [LogisticRegression(), SVC(), GradientBoostingClassifier()]
 #
+#         Model_param: list of model’s hyperparameter
+#         LogisticRegression()’s None: [penalty:(none,l2), random_state:(0,1), C:(0.01, 0.1, 1.0, 10.0, 100.0),
+#                                       solver:(lbfgs, sag, saga], max_iter:(10, 50, 100)]
+#         SVC()’s None: [random_state: (0,1), kernel: (linear, rbf, sigmoid),
+#                        C: (0.01, 0.1, 1.0, 10.0, 100.0), gamma: (scale, auto)]
+#         GradientBoostingClassifier()’s None: [loss:(deviance, exponential),learning_rate:(0.001, 0.1, 1),
+#                                               n_estimators:(1, 10,100,1000),subsample: (0.0001,0.001, 0.1),
+#                                               min_samples_split:(10,50, 100, 300),min_samples_leaf:(5, 10, 15,50)]
+#
+#         If you want to set other ways, then put the hyperparameter in list.
+#
+#         Cv = cross validation’s K
+#            None: 5
+#         N_jobs = number of jobs to run in parallel. Training the estimator and computing score are
+#                  parallelized over the cross-validation splits
+# 	        None: 1
 def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                       models=None, model_param=None, cv=None, n_jobs=None):
 
@@ -278,7 +307,7 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                             param = parameter[2]
                     else:
                         param = parameter
-
+                    # Set scorer
                     grid_scorer = make_scorer(overall_average_score, greater_is_better=True)
 
                     # Modeling(Using the RandomSearchCV)
@@ -293,7 +322,7 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
                         feat = 'SelectKBest'
                     else:
                         feat = 'RFE'
-
+                    # Get predictied value and values for confusion matrix.
                     pred = random_search.predict(X_test)
                     prob = random_search.predict_proba(X_test)
                     prob_positive = prob[:, 1]
@@ -355,7 +384,16 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     print("### Classification Report ###")
     print(best_combination1['report'])
     print("### Confusion Matrix ###")
-    print(best_combination1['confusion'])
+    ax = sns.heatmap(best_combination1['confusion'], annot=True, cmap='Blues')
+    ax.set_title("Confusion matrix")
+    ax.set_xlabel("\n Predicted values")
+    ax.set_ylable("Actual values")
+
+    ax.xaxis.set_ticklabels(['False','True'])
+    ax.yaxis.set_ticklabels(['False','True'])
+    plt.show()
+
+
 
     # Print SVC
     print("\nSVC")
@@ -368,7 +406,14 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     print("### Classification Report ###")
     print(best_combination2['report'])
     print("### Confusion Matrix ###")
-    print(best_combination2['confusion'])
+    ax = sns.heatmap(best_combination2['confusion'], annot=True, cmap='Blues')
+    ax.set_title("Confusion matrix")
+    ax.set_xlabel("\n Predicted values")
+    ax.set_ylable("Actual values")
+
+    ax.xaxis.set_ticklabels(['False', 'True'])
+    ax.yaxis.set_ticklabels(['False', 'True'])
+    plt.show()
 
 
     # Print GradientBossting Classifier
@@ -382,8 +427,14 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
     print("### Classification Report ###")
     print(best_combination3['report'])
     print("### Confusion Matrix ###")
-    print(best_combination3['confusion'])
+    ax = sns.heatmap(best_combination3['confusion'], annot=True, cmap='Blues')
+    ax.set_title("Confusion matrix")
+    ax.set_xlabel("\n Predicted values")
+    ax.set_ylable("Actual values")
 
+    ax.xaxis.set_ticklabels(['False', 'True'])
+    ax.yaxis.set_ticklabels(['False', 'True'])
+    plt.show()
     # ROC curve
     plt.rcParams['figure.figsize'] = [10,8]
     plt.style.use("bmh")
@@ -399,6 +450,8 @@ def FindBestAccruacy(X, y, scale_col, encode_col, scalers=None, encoders=None,
 
     plt.plot([0,1],[0,1], linestyle='--', color='black')
     plt.show()
+
+
 
     return
 
