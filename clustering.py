@@ -20,6 +20,59 @@ from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
 from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
 from sklearn.metrics import silhouette_score
 sns.set()
+########################################################################################################################
+# AutoML(X, y=None, scale_col=None, encode_col=None, scalers=None, encoders=None,
+#            features=None, feature_param=None, models=None, model_param=None,
+#            scores=None, score_param=None)
+# **************************************************************************************
+# ******************************** Must Read *******************************************
+# **************************************************************************************
+# Descripiton= When parameters are put in, the plot and scores are output
+#              The method of producing results in AutoML function consists of three main steps
+#
+#              Step 1 = Comparing using the silhouette score.
+#                       Feature selection(PCA(),RandomSelect(),CustomSelect()) * Model(KMeans(),GMM(),MeanShift()) = 9,
+#                       Find a combination with the best silhouette score in each combination
+#
+#              Step 2 = Compare it once more using the purity score to select the best model.
+#                       Model(KMeans(),GMM(),MeanShift()) = 3
+#
+#              Step 3 = Visualize using some plot for each model.
+# ***************************************************************************************
+# ***************************************************************************************
+#
+# Input = X: Data Feature
+#         Y: Data Target
+#         Scale_col: columns to scales
+#         Encode_col: columns to encode
+#         Scalers: list of scalers
+#                   None:[StandardScaler(), RobustScaler()]
+#         Encoders: list of encoders
+#                   None:[OrdinalEncoder(),LabelEncoder()]
+#         Feature: list of features
+#                  None: [PCA(),RandomSelect(),CustomSelect()]
+#         Feature_param: feature selection method's parameter
+#                        PCA()'s None: [n_components: None(int)]
+#                        RandomSelect()'s None: [number_of_features: None(int)]
+#                        CustomSelect()'s None: [combination_of_features: None(list)]
+#
+#         Models: list of models
+#                 None:[KMeans(),GMM(),MeanShift()]
+#         Model_param: list of model's hyperparameter
+#                       KMeans()'s None:[n_clusters: None(int), init: None(k-means++, random),
+#                                  n_init: None(int), random_state:None(int)]
+#                       GMM()'s None:[n_components: None (int), covariance_type: None (spherical, tied, diag),
+#                                  n_init: None (int), Random_state: None (int), tol: None (float)]
+#                       MeanShift()'s None:[bandwidth: None(int)]
+#         Scores: list of score methods
+#                 None: [silhouette_score(), purity(), eyeball()]
+#         Score_param: list of score method's hyperparemeter
+#                       Silhouette_score()’s None: [metric: None (str, callable), random_state: None (int)]
+#                       Purity()’s None: None
+#                       eyeball()'s None: None
+#         Output=some scores, plots
+########################################################################################################################
+
 df = pd.read_csv('online_shoppers_intention.csv')
 
 # print(list(df.columns.values))
